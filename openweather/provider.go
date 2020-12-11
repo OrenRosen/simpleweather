@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/OrenRosen/simpleweather/temprature"
+	"github.com/OrenRosen/simpleweather/weather"
 )
 
 const (
@@ -24,33 +24,36 @@ func NewProvider(apiKey string) *provider {
 	}
 }
 
-func (p *provider) GetWeatherByCity(city string) (temprature.Weather, error) {
+func (p *provider) GetWeatherByCity(city string) (weather.Weather, error) {
+	// compose the url. note that it's not the best way to add query params.
 	path := fmt.Sprintf(pathFormatWeatherByCity, city, p.apiKey)
 	u := endpoint + path
 
 	res, err := http.Get(u)
 	if err != nil {
-		return temprature.Weather{}, fmt.Errorf("openweather.GetWeatherByCity failed http GET: %s", err)
+		return weather.Weather{}, fmt.Errorf("openweather.GetWeatherByCity failed http GET: %s", err)
 	}
 
 	defer func() {
 		_ = res.Body.Close()
 	}()
 
+	// read the response body and encode it into the respose struct
 	bodyRaw, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return temprature.Weather{}, fmt.Errorf("openweather.GetWeatherByCity failed reading body: %s", err)
+		return weather.Weather{}, fmt.Errorf("openweather.GetWeatherByCity failed reading body: %s", err)
 	}
 
 	var weatherRes weatherResponse
 	if err = json.Unmarshal(bodyRaw, &weatherRes); err != nil {
-		return temprature.Weather{}, fmt.Errorf("openweather.GetWeatherByCity failed encoding body: %s", err)
+		return weather.Weather{}, fmt.Errorf("openweather.GetWeatherByCity failed encoding body: %s", err)
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return temprature.Weather{}, fmt.Errorf("openweather.GetWeatherByCity got error from OpenWeather: %s", weatherRes.Message)
+		return weather.Weather{}, fmt.Errorf("openweather.GetWeatherByCity got error from OpenWeather: %s", weatherRes.Message)
 	}
 
+	// return the external response converted into an entity
 	return weatherRes.ToWeather(), nil
 }
 
@@ -64,8 +67,8 @@ type weatherResponse struct {
 	}
 }
 
-func (r weatherResponse) ToWeather() temprature.Weather {
-	return temprature.Weather{
+func (r weatherResponse) ToWeather() weather.Weather {
+	return weather.Weather{
 		Temp:     r.Main.Temp,
 		Pressure: r.Main.Pressure,
 		MinTemp:  r.Main.TempMin,

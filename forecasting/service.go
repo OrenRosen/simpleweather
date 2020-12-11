@@ -3,11 +3,11 @@ package forecasting
 import (
 	"fmt"
 
-	"github.com/OrenRosen/simpleweather/temprature"
+	"github.com/OrenRosen/simpleweather/weather"
 )
 
 type WeatherProvider interface {
-	GetWeatherByCity(city string) (temprature.Weather, error)
+	GetWeatherByCity(city string) (weather.Weather, error)
 }
 
 type service struct {
@@ -21,12 +21,12 @@ func NewService(p WeatherProvider) *service {
 }
 
 func (s *service) WhatToWear(city string) (string, error) {
-	weather, err := s.weatherProvider.GetWeatherByCity(city)
+	w, err := s.weatherProvider.GetWeatherByCity(city)
 	if err != nil {
 		return "", fmt.Errorf("WhatToWear: %w", err)
 	}
 
-	if weather.Temp < 24 {
+	if w.Temp < 21 {
 		return "long sleeves", nil
 	}
 
