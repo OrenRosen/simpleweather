@@ -1,4 +1,4 @@
-package temprature
+package weather
 
 type Weather struct {
 	Temp     float32
